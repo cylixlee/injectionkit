@@ -10,3 +10,16 @@ dependencies = []
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.18.2",
+    "pytest>=8.4.2",
+]
+
+[tool.ruff]
+line-length = 120
+
+[tool.basedpyright]
+reportAny = false
+reportUnknownMemberType = false
