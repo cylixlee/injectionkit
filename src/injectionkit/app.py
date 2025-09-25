@@ -1,8 +1,12 @@
 import inspect
+from collections.abc import Callable
 from inspect import Parameter
 from typing import Generic, TypeVar, final
 
-from .option import Option, Provider, Supplier
+from .option import Consumer, Option, Provider, Supplier
+
+__all__ = ["App"]
+
 
 _T = TypeVar("_T")
 
@@ -42,21 +46,64 @@ def _annotation_of(option: Provider | Supplier) -> type:
             return type(option.instance)
 
 
+class _ProxyInvoker(object):
+    _positional: list[object]
+    _keyword: dict[str, object]
+    _callable: Callable[..., object]
+
+    def __init__(self, callable: Callable[..., object]) -> None:
+        self._callable = callable
+        self._positional = []
+        self._keyword = {}
+
+    def argument(self, parameter: Parameter, value: object | list[object]) -> None:
+        if parameter.kind == Parameter.VAR_KEYWORD:
+            raise TypeError(f"Unsupported VAR_POSITIONAL parameter {parameter.name} of {self._callable}")
+
+        if parameter.kind == Parameter.POSITIONAL_ONLY:
+            self._positional.append(value)
+        elif parameter.kind == Parameter.VAR_POSITIONAL:
+            if not isinstance(value, list):
+                raise TypeError(f"Expected list for VAR_POSITIONAL parameter {parameter.name} of {self._callable}")
+            self._positional.extend(value)  # pyright: ignore[reportUnknownArgumentType]
+        else:
+            if parameter.name in self._keyword:
+                raise ValueError(f"Duplicate keyword argument {parameter.name} of {self._callable}")
+            self._keyword[parameter.name] = value
+
+    def invoke(self) -> object:
+        return self._callable(*self._positional, **self._keyword)
+
+
 @final
 class App(object):
     _providers: _ResolutionContainer[Provider]
     _instances: _ResolutionContainer[object]
+    _consumers: list[Consumer]
 
     def __init__(self, *options: Option) -> None:
         self._providers = _ResolutionContainer[Provider]()
         self._instances = _ResolutionContainer[object]()
+        self._consumers = []
         for option in options:
             if isinstance(option, Provider):
                 self._providers.register(_annotation_of(option), option)
             elif isinstance(option, Supplier):
                 self._instances.register(_annotation_of(option), option.instance)
             else:
-                raise TypeError(f"Unsupported option type: {type(option)}")
+                self._consumers.append(option)
+
+    def run(self) -> None:
+        consumer_proxies: list[_ProxyInvoker] = []
+        for consumer in self._consumers:
+            parameters = inspect.signature(consumer.func).parameters
+            proxy = _ProxyInvoker(consumer.func)
+            for parameter in parameters.values():
+                proxy.argument(parameter, self._resolve(parameter.annotation))
+            consumer_proxies.append(proxy)
+
+        for consumer_proxy in consumer_proxies:
+            _ = consumer_proxy.invoke()
 
     def __contains__(self, key: type) -> bool:
         return key in self._instances or key in self._providers
@@ -74,33 +121,19 @@ class App(object):
 
     def _instantiate(self, provider: Provider) -> object:
         parameters = inspect.signature(provider.component.__init__).parameters
-        args: list[object] = []
-        kwargs: dict[str, object] = {}
+        constructor_proxy = _ProxyInvoker(provider.component)
         for name, parameter in parameters.items():
-            if parameter.kind == Parameter.VAR_KEYWORD:
-                raise ValueError(f"VAR_KEYWORD parameter {name} in {provider.component} is not supported")
+            if name == "self":
+                continue
 
-            argument: object | list[object] = None
             if parameter.annotation not in self:
                 if parameter.default is not Parameter.empty:
-                    argument = parameter.default
+                    constructor_proxy.argument(parameter, parameter.default)
                 else:
-                    raise ValueError(f"Missing argument {name} of {provider.component}")
+                    raise ValueError(f"Missing dependency for {name} of {provider.component}")
             else:
-                argument = self._resolve(parameter.annotation)
-
-            if parameter.kind == Parameter.VAR_POSITIONAL:
-                if not isinstance(argument, list):
-                    raise ValueError(
-                        f"Argument {name} of {provider.component} should be resolved as multiple instances"
-                    )
-                args.extend(argument)  # pyright: ignore[reportUnknownArgumentType]
-            elif parameter.kind == Parameter.POSITIONAL_ONLY:
-                args.append(argument)
-            else:
-                kwargs[name] = argument
-
-        instance = provider.component(*args, **kwargs)
+                constructor_proxy.argument(parameter, self._resolve(parameter.annotation))
+        instance = constructor_proxy.invoke()
         if provider.singleton:
             self._instances.register(_annotation_of(provider), instance)
         return instance
