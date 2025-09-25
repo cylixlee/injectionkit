@@ -36,19 +36,15 @@ class Teacher(object):
         print(f"{self.name} is teaching {self.student.name}")
 
 
-def teach(teacher: Teacher) -> None:
+def main(teacher: Teacher) -> None:
     teacher.teach()
 
 
-def main() -> None:
+if __name__ == "__main__":
     App(
         Supplier(StudentParams("Cylix", 23)),
         Supplier(TeacherParams("Ms. Lee")),
         Provider(Student),
         Provider(Teacher),
-        Consumer(teach),
+        Consumer(main),
     ).run()
-
-
-if __name__ == "__main__":
-    main()
