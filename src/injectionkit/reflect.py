@@ -1,10 +1,14 @@
 import inspect
+import typing
 from collections import OrderedDict
 from collections.abc import Callable
 from dataclasses import dataclass
 from inspect import Parameter
+from typing import Annotated
 
 __all__ = [
+    "is_annotated",
+    "unpack_annotated",
     "Parameter",
     "ComplicatedParameterError",
     "UndefinedParameterError",
@@ -13,6 +17,15 @@ __all__ = [
     "Injective",
     "injective_of",
 ]
+
+
+def is_annotated(annotation: object) -> bool:
+    return typing.get_origin(annotation) is Annotated
+
+
+def unpack_annotated(annotation: object) -> tuple[type, list[object]]:
+    arguments = typing.get_args(annotation)
+    return arguments[0], list(arguments[1:])
 
 
 class ComplicatedParameterError(Exception):
@@ -104,25 +117,69 @@ class ProxyInvoker(object):
 class Injective(object):
     obj: Callable[..., object]
     parameters: list[Parameter]
-    returns: type
+    returns: object
+    labels: list[str] | None = None
 
     def invoker(self) -> ProxyInvoker:
         return ProxyInvoker(self.obj, self.parameters)
 
 
-def injective_of(obj: object) -> Injective:
-    if isinstance(obj, type):
-        return _parse_callable(obj.__init__, alternate=obj)
+class UnsupportedLabelTypeError(Exception):
+    label_type: object
+
+    def __init__(self, label_type: object):
+        super().__init__(f"Unsupported label type: {label_type}")
+        self.label_type = label_type
+
+
+def injective_of(obj: object, labels: list[str] | None = None) -> Injective:
+    if is_annotated(obj):
+        # Annotated type
+        #
+        # For annotated types (e.g. `Annotated[str, "label"]`), we just unpack the underlying type and the metadata
+        # (labels), and create an injective object with the underlying type and the labels.
+        underlying, metadata = unpack_annotated(obj)
+        for metadatum in metadata:
+            if not isinstance(metadatum, str):
+                raise UnsupportedLabelTypeError(type(metadatum))
+        return injective_of(underlying, metadata)  # pyright: ignore[reportArgumentType]
+    elif isinstance(obj, type):
+        # Classes
+        #
+        # We use the constructor (`__init__`) of the class as the underlying callable, while calling with the class
+        # name. This is the Pythonic way to create an instance of a class.
+        return _parse_callable(obj.__init__, labels, actual_invocation=obj)
     elif isinstance(obj, Callable):
-        return _parse_callable(obj)  # pyright: ignore[reportUnknownArgumentType]
+        # Functions
+        #
+        # Functions can be used to inject dependencies, too. It takes several parameters and returns a value.
+        return _parse_callable(obj, labels)  # pyright: ignore[reportUnknownArgumentType]
     raise TypeError(f"Cannot create functor from {obj}")
 
 
-def _parse_callable(obj: Callable[..., object], alternate: Callable[..., object] | None = None) -> Injective:
+def _parse_callable(
+    obj: Callable[..., object],
+    labels: list[str] | None,
+    actual_invocation: Callable[..., object] | None = None,
+) -> Injective:
+    if labels is None:
+        labels = []
+
+    # Parse parameters
     signature = inspect.signature(obj)
     parameters: list[Parameter] = []
     for parameter in signature.parameters.values():
         if parameter.name == "self":
             continue
         parameters.append(parameter)
-    return Injective(alternate if alternate else obj, parameters, signature.return_annotation)
+
+    # Parse return type. Return type annotation is accepted
+    returns = signature.return_annotation
+    if is_annotated(returns):
+        returns, returns_labels = unpack_annotated(returns)
+        for label in returns_labels:
+            if not isinstance(label, str):
+                raise UnsupportedLabelTypeError(type(label))
+        labels = [*labels, *returns_labels]  # pyright: ignore[reportAssignmentType]
+
+    return Injective(actual_invocation if actual_invocation else obj, parameters, returns, labels)
