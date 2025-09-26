@@ -3,13 +3,13 @@ from typing import Annotated
 from injectionkit import reflect
 
 
-def test_parameter() -> None:
-    def hello(name: Annotated[str, "student-name"]) -> None:
-        print(f"Hello, {name}!")
+def test_class() -> None:
+    class Student(object):
+        pass
 
-    function = reflect.injective_of(hello)
-    assert reflect.is_annotated(function.parameters[0].annotation)
-    assert reflect.unpack_annotated(function.parameters[0].annotation) == (str, ["student-name"])
+    klass = reflect.injective_of(Annotated[Student, "student"])
+    assert klass.returns is Student
+    assert klass.labels == ["student"]
 
 
 def test_return_type() -> None:
@@ -17,4 +17,5 @@ def test_return_type() -> None:
         return "Goodbye!"
 
     function = reflect.injective_of(goodbye)
+    assert function.returns is str
     assert function.labels == ["goodbye-message"]

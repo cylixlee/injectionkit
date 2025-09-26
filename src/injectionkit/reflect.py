@@ -9,12 +9,12 @@ from typing import Annotated
 __all__ = [
     "is_annotated",
     "unpack_annotated",
-    "Parameter",
     "ComplicatedParameterError",
     "UndefinedParameterError",
     "RedefinedParameterError",
     "ProxyInvoker",
     "Injective",
+    "UnsupportedLabelTypeError",
     "injective_of",
 ]
 
@@ -148,7 +148,7 @@ def injective_of(obj: object, labels: list[str] | None = None) -> Injective:
         #
         # We use the constructor (`__init__`) of the class as the underlying callable, while calling with the class
         # name. This is the Pythonic way to create an instance of a class.
-        return _parse_callable(obj.__init__, labels, actual_invocation=obj)
+        return _parse_callable(obj.__init__, labels, klass=obj)
     elif isinstance(obj, Callable):
         # Functions
         #
@@ -157,11 +157,7 @@ def injective_of(obj: object, labels: list[str] | None = None) -> Injective:
     raise TypeError(f"Cannot create functor from {obj}")
 
 
-def _parse_callable(
-    obj: Callable[..., object],
-    labels: list[str] | None,
-    actual_invocation: Callable[..., object] | None = None,
-) -> Injective:
+def _parse_callable(obj: Callable[..., object], labels: list[str] | None, klass: type | None = None) -> Injective:
     if labels is None:
         labels = []
 
@@ -173,13 +169,16 @@ def _parse_callable(
             continue
         parameters.append(parameter)
 
-    # Parse return type. Return type annotation is accepted
-    returns = signature.return_annotation
-    if is_annotated(returns):
-        returns, returns_labels = unpack_annotated(returns)
-        for label in returns_labels:
-            if not isinstance(label, str):
-                raise UnsupportedLabelTypeError(type(label))
-        labels = [*labels, *returns_labels]  # pyright: ignore[reportAssignmentType]
+    if not klass:
+        # Parse return type. Return type annotation is accepted
+        returns = signature.return_annotation
+        if is_annotated(returns):
+            returns, returns_labels = unpack_annotated(returns)
+            for label in returns_labels:
+                if not isinstance(label, str):
+                    raise UnsupportedLabelTypeError(type(label))
+            labels = [*labels, *returns_labels]  # pyright: ignore[reportAssignmentType]
+    else:
+        returns = klass
 
-    return Injective(actual_invocation if actual_invocation else obj, parameters, returns, labels)
+    return Injective(klass if klass else obj, parameters, returns, labels)

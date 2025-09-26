@@ -1,5 +1,4 @@
 from injectionkit import reflect
-from injectionkit.reflect import Parameter
 
 
 def test_function() -> None:
@@ -28,7 +27,7 @@ def test_constructor() -> None:
     constructor = reflect.injective_of(Student)
     assert constructor.parameters[0].annotation is str
     assert constructor.parameters[1].annotation is int
-    assert constructor.returns is Parameter.empty
+    assert constructor.returns is Student
 
     invoker = constructor.invoker()
     invoker.argument(constructor.parameters[0], "Cylix")
