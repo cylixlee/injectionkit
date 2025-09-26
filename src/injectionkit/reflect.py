@@ -67,7 +67,7 @@ class RedefinedParameterError(Exception):
     ) -> None:
         super().__init__(
             f"Parameter `{parameter.name}` of object `{obj.__class__.__name__}` already has a value "
-            + "(`{value_present}` <- `{value_new}`)"
+            + f"(`{value_present}` <- `{value_new}`)"
         )
         self.obj = obj
         self.parameter = parameter
