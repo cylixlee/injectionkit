@@ -136,7 +136,7 @@ def injective_of(obj: object, labels: list[str] | None = None) -> Injective:
     if is_annotated(obj):
         # Annotated type
         #
-        # For annotated types (e.g. `Annotated[str, "label"]`), we just unpack the underlying type and the metadata
+        # For annotated types (e.g. `Annotated[Klass, "label"]`), we just unpack the underlying type and the metadata
         # (labels), and create an injective object with the underlying type and the labels.
         underlying, metadata = unpack_annotated(obj)
         for metadatum in metadata:
