@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from injectionkit.reflect.types import ConcreteType, Type, typeof
+from injectionkit.reflect import ConcreteType, Type, typeof
 
 
 def test_typeof() -> None:
