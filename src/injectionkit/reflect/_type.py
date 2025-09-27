@@ -11,13 +11,13 @@ __all__ = [
 ]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, unsafe_hash=True)
 class ConcreteType(object):
     constructor: type
     parameters: list["ConcreteType"]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, unsafe_hash=True)
 class Type(object):
     concrete: ConcreteType
     labels: set[str]

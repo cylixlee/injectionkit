@@ -25,7 +25,8 @@ class ParameterKind(Enum):
 
 @dataclass(frozen=True)
 class Parameter(object):
-    annotation: Type
+    typ: Type
+    name: str
     default_value: object
     kind: ParameterKind
 
@@ -65,7 +66,7 @@ def signatureof(obj: object) -> Signature:
             default_value = parameter.default
         if parameter.kind == inspect.Parameter.POSITIONAL_ONLY:
             kind = ParameterKind.positional
-        parameters.append(Parameter(parameter_type, default_value, kind))
+        parameters.append(Parameter(parameter_type, parameter.name, default_value, kind))
 
     returns: Type | None = None
     if function_signature.return_annotation is not inspect.Signature.empty:
