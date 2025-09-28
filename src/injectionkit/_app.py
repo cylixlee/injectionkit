@@ -41,6 +41,6 @@ class App(object):
                     inner_type = parameter.typ.concrete.parameters[0]
                     argument = self._container.instantiate(inner_type, parameter.typ.labels)
                     if not isinstance(argument, list):
-                        argument = [argument]
+                        raise  # No MULTIPLE values found.
                     instantiator.argument(parameter.name, argument)  # pyright: ignore[reportUnknownArgumentType]
             _ = instantiator.instantiate()
