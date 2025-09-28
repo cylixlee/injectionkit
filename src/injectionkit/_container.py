@@ -94,9 +94,9 @@ class DependencyContainer(object):
 
     def resolve(self, annotation: object) -> object | list[object]:
         typ = typeof(annotation)
-        return self._instantiate(typ.concrete, typ.labels)
+        return self.instantiate(typ.concrete, typ.labels)
 
-    def _instantiate(self, concrete: ConcreteType, labels: set[str]) -> object | list[object]:
+    def instantiate(self, concrete: ConcreteType, labels: set[str]) -> object | list[object]:
         candidates: list[object] = []
         if concrete in self._instances:
             for labeled_instance in self._instances[concrete]:
@@ -114,7 +114,7 @@ class DependencyContainer(object):
                 instantiator = Instantiator(provider.factory)
                 for parameter in signature.parameters:
                     try:
-                        argument = self._instantiate(parameter.typ.concrete, parameter.typ.labels)
+                        argument = self.instantiate(parameter.typ.concrete, parameter.typ.labels)
                         instantiator.argument(parameter.name, argument)
                     except MissingDependencyError:
                         if parameter.default_value is Unspecified:

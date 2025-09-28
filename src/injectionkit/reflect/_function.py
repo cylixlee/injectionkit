@@ -72,6 +72,10 @@ def signatureof(obj: object) -> Signature:
             kind = ParameterKind.positional
         parameters.append(Parameter(parameter_type, parameter.name, default_value, kind))
 
-    if returns is None:
+    if (
+        returns is None
+        and function_signature.return_annotation is not inspect.Parameter.empty
+        and function_signature.return_annotation is not None
+    ):
         returns = typeof(function_signature.return_annotation)
     return Signature(parameters, returns)

@@ -43,7 +43,7 @@ class InvalidLabelTypeError(Exception):
 
 def typeof(annotation: object, exist_labels: set[str] | None = None) -> Type:
     origin = typing.get_origin(annotation)
-    if origin is typing.Annotated:
+    if origin == typing.Annotated:
         # Annotated type
         #
         # The nested annotated type is automatically flattened. e.g. `Annotated[Annotated[int, "foo"], "bar"]` is

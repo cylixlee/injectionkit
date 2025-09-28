@@ -32,7 +32,7 @@ class Provider(object):
             factory_signature = signatureof(self.factory)
             if factory_signature.returns is None:
                 raise InvalidProviderFactoryError(self.factory)
-            return typeof(factory_signature.returns).concrete
+            return factory_signature.returns.concrete
 
     @property
     @cache
@@ -44,8 +44,7 @@ class Provider(object):
             factory_signature = signatureof(self.factory)
             if factory_signature.returns is None:
                 raise InvalidProviderFactoryError(self.factory)
-            returns_type = typeof(factory_signature.returns)
-            return returns_type.labels
+            return factory_signature.returns.labels
 
 
 @dataclass(frozen=True)
