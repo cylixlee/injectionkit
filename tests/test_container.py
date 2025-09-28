@@ -55,3 +55,19 @@ def test_labeled() -> None:
     assert isinstance(last, CustomGreeter)
     assert first.greet() == "Hello, Cylix!"
     assert last.greet() == "Hello, Lee!"
+
+
+def test_multiple() -> None:
+    container = DependencyContainer()
+    container.register(Supplier(CustomGreeter("Cylix"), regard=Greeter))
+    container.register(Supplier(CustomGreeter("Lee"), regard=Greeter))
+
+    greeters = container.resolve(Greeter)
+    assert isinstance(greeters, list)
+    assert len(greeters) == 2  # pyright: ignore[reportUnknownArgumentType]
+    assert isinstance(greeters[0], Greeter)
+    assert isinstance(greeters[1], Greeter)
+    assert isinstance(greeters[0], CustomGreeter)
+    assert isinstance(greeters[1], CustomGreeter)
+    assert greeters[0].greet() == "Hello, Cylix!"
+    assert greeters[1].greet() == "Hello, Lee!"
