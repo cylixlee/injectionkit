@@ -45,7 +45,10 @@ class ComplicatedSignatureError(Exception):
 
 
 def signatureof(obj: object) -> Signature:
+    returns: Type | None = None
+
     if isinstance(obj, type):
+        returns = typeof(obj)
         obj = obj.__init__
     if not callable(obj):
         raise TypeError(f"Expected a callable, got `{type(obj)}`")
@@ -57,6 +60,8 @@ def signatureof(obj: object) -> Signature:
     for parameter in function_signature.parameters.values():
         if parameter.kind == inspect.Parameter.VAR_POSITIONAL or parameter.kind == inspect.Parameter.VAR_KEYWORD:
             raise ComplicatedSignatureError(parameter.name)
+        if parameter.name == "self":
+            continue
 
         parameter_type = typeof(parameter.annotation)
         default_value: object | Unspecified = Unspecified
@@ -67,7 +72,6 @@ def signatureof(obj: object) -> Signature:
             kind = ParameterKind.positional
         parameters.append(Parameter(parameter_type, parameter.name, default_value, kind))
 
-    returns: Type | None = None
-    if function_signature.return_annotation is not inspect.Signature.empty:
+    if returns is None:
         returns = typeof(function_signature.return_annotation)
     return Signature(parameters, returns)

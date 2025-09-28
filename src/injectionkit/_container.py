@@ -1,8 +1,10 @@
 from collections.abc import Callable, Iterable
 from typing import Generic, TypeVar, final
 
-from .option import InvalidProviderFactoryError, Provider, Supplier
+from ._option import InvalidProviderFactoryError, Provider, Supplier
 from .reflect import ConcreteType, Parameter, ParameterKind, Unspecified, signatureof, typeof
+
+__all__ = ["Instantiator", "MissingDependencyError", "DependencyContainer"]
 
 
 class Instantiator(object):
