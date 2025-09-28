@@ -11,8 +11,8 @@ def annotated_parameter(a: Annotated[str, "label"]) -> str: ...  # pyright: igno
 def test_signatureof() -> None:
     simple_signature = Signature(
         [
-            Parameter(Type(ConcreteType(str, []), set()), Unspecified, ParameterKind.positional),
-            Parameter(Type(ConcreteType(int, []), set()), 10, ParameterKind.keyword),
+            Parameter(Type(ConcreteType(str, []), set()), "a", Unspecified, ParameterKind.positional),
+            Parameter(Type(ConcreteType(int, []), set()), "b", 10, ParameterKind.keyword),
         ],
         Type(
             ConcreteType(
@@ -27,12 +27,12 @@ def test_signatureof() -> None:
     )
 
     annotated_returns_signature = Signature(
-        [Parameter(Type(ConcreteType(str, []), set()), Unspecified, ParameterKind.keyword)],
+        [Parameter(Type(ConcreteType(str, []), set()), "a", Unspecified, ParameterKind.keyword)],
         Type(ConcreteType(str, []), {"label"}),
     )
 
     annotated_parameter_signature = Signature(
-        [Parameter(Type(ConcreteType(str, []), {"label"}), Unspecified, ParameterKind.keyword)],
+        [Parameter(Type(ConcreteType(str, []), {"label"}), "a", Unspecified, ParameterKind.keyword)],
         Type(ConcreteType(str, []), set()),
     )
 

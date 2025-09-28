@@ -1,5 +1,4 @@
 import inspect
-from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum, auto
 
@@ -48,10 +47,10 @@ class ComplicatedSignatureError(Exception):
 def signatureof(obj: object) -> Signature:
     if isinstance(obj, type):
         obj = obj.__init__
-    if not isinstance(obj, Callable):
+    if not callable(obj):
         raise TypeError(f"Expected a callable, got `{type(obj)}`")
 
-    function_signature = inspect.signature(obj)  # pyright: ignore[reportUnknownArgumentType]
+    function_signature = inspect.signature(obj)
 
     # Parse parameters
     parameters: list[Parameter] = []
