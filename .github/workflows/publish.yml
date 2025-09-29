@@ -19,6 +19,8 @@ jobs:
           python-version: "3.10"
       - name: Sync dependencies
         run: uv sync # This shall install dev dependencies, in which we specified Pytest.
+      - name: Run type checks
+        run: uv run mypy . --pretty
       - name: Run tests
         run: uv run pytest
   publish_to_pypi:

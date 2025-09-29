@@ -107,7 +107,7 @@ def signatureof(obj: object) -> Signature:
 
     if isinstance(obj, type):
         returns = typeof(obj)
-        obj = obj.__init__
+        obj = obj.__init__  # type: ignore
     if not callable(obj):
         raise TypeError(f"Expected a callable, got `{type(obj)}`")
 

@@ -259,4 +259,4 @@ def test_multi_labels() -> None:
     ).run()
 ```
 
-For more examples, see the [tests](tests/) folder.
+For more examples, see the [tests](https://github.com/cylixlee/injectionkit/tree/main/tests) folder.
