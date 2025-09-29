@@ -1,7 +1,7 @@
 from typing import final
 
 from ._container import DependencyContainer, Instantiator, MissingDependencyError
-from ._option import Consumer, Option
+from ._option import Consumer, Option, Supplier
 from .reflect import Unspecified, signatureof
 
 __all__ = ["App"]
@@ -33,6 +33,7 @@ class App(object):
         """
         self._container = DependencyContainer()
         self._consumers = []
+        self.add(Supplier(self))
         self.add(*options)
 
     def add(self, *options: Option) -> None:
