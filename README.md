@@ -2,17 +2,7 @@
 
 Dependency Injection framework for Python.
 
-**Development Status**
-
 This project is in development and issues and PRs are welcome. Please feel free to share if you've got any ideas or encountered with any problems.
-
-**Semantic Versioning**
-
-To make this package more stable to use, semantic versioning is **strictly** obeyed. Improper functionalities will be deprecated under the current major version, and no breaking changes will be made. When the major version bumps, the deprecated functionalities will be removed and breaking changes can be introduced.
-
-> *Patch versions*
-> 
-> If a behavior is considered a **bug**, some breaking changes could be applied. This is the only exception to the major versioning rules.
 
 - [InjectionKit](#injectionkit)
   - [Installing](#installing)
