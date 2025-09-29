@@ -15,17 +15,46 @@ __all__ = [
 
 @dataclass(frozen=True, unsafe_hash=True)
 class ConcreteType(object):
+    """Describe a nominal type along with its generic parameters.
+
+    Represents the fully resolved constructor for a dependency along with any nested parameter types extracted from
+    typing annotations.
+
+    Attributes:
+        constructor: Base Python type that should be instantiated or matched.
+        parameters: Frozen list of nested `ConcreteType` instances for generic parameters.
+    """
+
     constructor: type
     parameters: FrozenList["ConcreteType"]
 
 
 @dataclass(frozen=True, unsafe_hash=True)
 class Type(object):
+    """Represent a reflected type along with any associated labels.
+
+    Couples the concrete type with a set of string labels that scope dependency resolution across providers and
+    consumers.
+
+    Attributes:
+        concrete: Concrete type descriptor captured from annotations.
+        labels: Set of string labels attached to the type.
+    """
+
     concrete: ConcreteType
     labels: set[str]
 
 
 class UnreflectableTypeError(Exception):
+    """Signal that an annotation cannot be converted into a `ConcreteType`.
+
+    Raised when the reflection logic encounters non-type objects or unsupported constructs that prevent type
+    introspection.
+
+    Args:
+        invalid_type: Annotation that could not be reflected.
+    """
+
     invalid_type: object
 
     def __init__(self, invalid_type: object) -> None:
@@ -34,6 +63,15 @@ class UnreflectableTypeError(Exception):
 
 
 class InvalidLabelTypeError(Exception):
+    """Signal that an annotation contains labels of an unsupported type.
+
+    Raised when annotations within `typing.Annotated` metadata use non-string labels, which would break the label
+    matching system.
+
+    Args:
+        invalid_label_type: Label value that failed validation.
+    """
+
     invalid_label_type: object
 
     def __init__(self, invalid_label_type: object) -> None:
@@ -42,6 +80,23 @@ class InvalidLabelTypeError(Exception):
 
 
 def typeof(annotation: object, exist_labels: set[str] | None = None) -> Type:
+    """Reflect an annotation into a `Type` with concrete structure and labels.
+
+    Handles plain types, generic aliases, and `typing.Annotated` metadata while recursively parsing nested annotations
+    to build complete type descriptors.
+
+    Args:
+        annotation: Type annotation to be reflected.
+        exist_labels: Optional set of labels carried from the calling context.
+
+    Returns:
+        Type object that includes the resolved concrete representation and associated labels.
+
+    Raises:
+        InvalidLabelTypeError: If an annotated label is not a string.
+        InvalidAnnotatedTypeError: If nested annotated types appear where they are not supported.
+        UnreflectableTypeError: If the annotation cannot be converted into a type.
+    """
     origin = typing.get_origin(annotation)
     if origin == typing.Annotated:
         # Annotated type
@@ -63,6 +118,15 @@ def typeof(annotation: object, exist_labels: set[str] | None = None) -> Type:
 
 
 class InvalidAnnotatedTypeError(Exception):
+    """Signal that `typing.Annotated` was used in an unsupported position.
+
+    Raised when nested annotated types appear inside concrete generic parameters, which would complicate the resolution
+    model.
+
+    Args:
+        invalid_annotated_type: Annotation that violated the constraint.
+    """
+
     invalid_annotated_type: object
 
     def __init__(self, invalid_annotated_type: object) -> None:

@@ -9,12 +9,44 @@ __all__ = ["App"]
 
 @final
 class App(object):
+    """Coordinate dependency options with consumer execution.
+
+    The application builds a dependency graph from the supplied options, keeps track of registered consumers, and
+    resolves their inputs when `run` executes.
+    """
+
     _container: DependencyContainer
     _consumers: list[Consumer]
 
     def __init__(self, *options: Option) -> None:
+        """Populate the application with the provided dependency options.
+
+        The constructor processes each option immediately, registering providers or suppliers and remembering consumers
+        for later execution.
+
+        Args:
+            *options: Provider, supplier, or consumer instances that describe how dependencies should be built or
+                consumed.
+
+        Returns:
+            None
+        """
         self._container = DependencyContainer()
         self._consumers = []
+        self.add(*options)
+
+    def add(self, *options: Option) -> None:
+        """Register additional dependency options after initialization.
+
+        The method processes each option immediately so new providers and suppliers become available to consumers while
+        new consumers are queued for later execution when `run` is called.
+
+        Args:
+            *options: Provider, supplier, or consumer instances to merge into the application.
+
+        Returns:
+            None
+        """
         for option in options:
             if isinstance(option, Consumer):
                 self._consumers.append(option)
@@ -22,6 +54,18 @@ class App(object):
                 self._container.register(option)
 
     def run(self) -> None:
+        """Resolve dependencies and invoke every registered consumer.
+
+        For each consumer the application determines required inputs, initializes them from registered dependencies or
+        defaults, injects the resulting values, and finally executes the callable.
+
+        Returns:
+            None
+
+        Raises:
+            MissingDependencyError: If a consumer requires a dependency that is not registered and lacks a default
+                value.
+        """
         for consumer in self._consumers:
             signature = signatureof(consumer.functor)
             instantiator = Instantiator(consumer.functor)
