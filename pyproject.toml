@@ -5,7 +5,7 @@ description = "Dependency Injection framework for Python"
 readme = "README.md"
 authors = [{ name = "Cylix Lee", email = "cylix.lee@outlook.com" }]
 requires-python = ">=3.10"
-dependencies = ["frozenlist>=1.7.0"]
+dependencies = []
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",

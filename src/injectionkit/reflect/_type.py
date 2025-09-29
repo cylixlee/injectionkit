@@ -1,8 +1,6 @@
 import typing
 from dataclasses import dataclass
 
-from frozenlist import FrozenList
-
 __all__ = [
     "ConcreteType",
     "Type",
@@ -26,7 +24,7 @@ class ConcreteType(object):
     """
 
     constructor: type
-    parameters: FrozenList["ConcreteType"]
+    parameters: tuple["ConcreteType", ...]
 
 
 @dataclass(frozen=True, unsafe_hash=True)
@@ -143,9 +141,7 @@ def _concrete_typeof(annotation: object) -> ConcreteType:
         # e.g. `int`, `str`. No labels, no generics, just return it as is.
         if not isinstance(annotation, type):
             raise UnreflectableTypeError(annotation)
-        parameters: FrozenList[ConcreteType] = FrozenList()
-        parameters.freeze()
-        return ConcreteType(annotation, parameters)
+        return ConcreteType(annotation, ())
     else:
         # Generic type
         #
@@ -156,6 +152,4 @@ def _concrete_typeof(annotation: object) -> ConcreteType:
         # not allowed. To resolve multiple ints with label "label", use `Annotated[list[int], "label"]` instead.
         if origin is typing.Annotated:
             raise InvalidAnnotatedTypeError(typing.get_type_hints(annotation, include_extras=True))
-        parameters = FrozenList([_concrete_typeof(arg) for arg in args])
-        parameters.freeze()
-        return ConcreteType(origin, parameters)
+        return ConcreteType(origin, tuple(_concrete_typeof(arg) for arg in args))
