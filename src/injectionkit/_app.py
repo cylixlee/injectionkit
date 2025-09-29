@@ -53,6 +53,15 @@ class App(object):
             else:
                 self._container.register(option)
 
+    def resolve(self, annotation: object) -> object:
+        """
+        Resolves a dependency.
+
+        Args:
+            annotation: The dependency annotation to resolve.
+        """
+        return self._container.resolve(annotation)
+
     def run(self) -> None:
         """Resolve dependencies and invoke every registered consumer.
 

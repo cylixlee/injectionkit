@@ -258,3 +258,5 @@ def test_multi_labels() -> None:
         Consumer(hello),
     ).run()
 ```
+
+For more examples, see the [tests](tests/) folder.
