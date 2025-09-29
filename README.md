@@ -75,6 +75,14 @@ def test_simple() -> None:
 Compositions between dependencies are must-have:
 
 ```python
+from dataclasses import dataclass
+
+from injectionkit import App, Consumer, Provider, Supplier
+
+
+# Here we define a dataclass, whose constructor (`__init__()`) is automatically created, by the `@dataclass` decorator.
+#
+# To be more precise, the constructor signature is: `def __init__(self, name: str, age: int) -> None`.
 @dataclass(frozen=True)
 class Person(object):
     name: str
