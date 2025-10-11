@@ -106,6 +106,8 @@ class _Labeled(Generic[_T]):
         self.labels = set(labels)
 
     def __contains__(self, labels: Iterable[str]) -> bool:
+        if not labels:
+            return not self.labels
         return self.labels.issuperset(labels)
 
 
