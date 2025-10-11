@@ -87,16 +87,17 @@ class App(object):
                     # Skip it if a default value is provided
                     if parameter.default_value is not Unspecified:
                         continue
-                    # If it's not a list, then this is indeed a missing dependency.
-                    if parameter.typ.concrete.constructor is not list:
-                        raise
+                    raise
+                    # # If it's not a list, then this is indeed a missing dependency.
+                    # if parameter.typ.concrete.constructor is not list:
+                    #     raise
 
-                    # Or, if it's a list, try to instantiate its inner type and returns them or it as a list
-                    inner_type = parameter.typ.concrete.parameters[0]
-                    argument = self._container.instantiate(inner_type, parameter.typ.labels)
-                    if not isinstance(argument, list):
-                        raise  # No MULTIPLE values found.
-                    instantiator.argument(parameter.name, argument)  # pyright: ignore[reportUnknownArgumentType]
+                    # # Or, if it's a list, try to instantiate its inner type and returns them or it as a list
+                    # inner_type = parameter.typ.concrete.parameters[0]
+                    # argument = self._container.instantiate(inner_type, parameter.typ.labels)
+                    # if not isinstance(argument, list):
+                    #     raise  # No MULTIPLE values found.
+                    # instantiator.argument(parameter.name, argument)
             _ = instantiator.instantiate()
 
 

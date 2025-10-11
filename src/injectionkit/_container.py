@@ -234,6 +234,11 @@ class DependencyContainer(object):
                             raise
                 candidates.append(instantiator.instantiate())
         if not candidates:
+            if concrete.constructor is list and len(concrete.parameters) == 1:
+                inner_type = concrete.parameters[0]
+                inner_candidates = self.instantiate(inner_type, labels)
+                if isinstance(inner_candidates, list):
+                    return inner_candidates  # pyright: ignore[reportUnknownVariableType]
             raise MissingDependencyError(concrete, labels)
         if len(candidates) == 1:
             return candidates[0]
