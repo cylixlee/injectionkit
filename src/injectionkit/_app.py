@@ -4,7 +4,7 @@ from ._container import DependencyContainer, Instantiator, MissingDependencyErro
 from ._option import Consumer, Option, Supplier
 from .reflect import Unspecified, signatureof
 
-__all__ = ["App"]
+__all__ = ["App", "runApp"]
 
 
 @final
@@ -98,3 +98,7 @@ class App(object):
                         raise  # No MULTIPLE values found.
                     instantiator.argument(parameter.name, argument)  # pyright: ignore[reportUnknownArgumentType]
             _ = instantiator.instantiate()
+
+
+def runApp(*options: Option) -> None:
+    App(*options).run()
